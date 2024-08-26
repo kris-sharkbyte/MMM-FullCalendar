@@ -1,27 +1,45 @@
 const NodeHelper = require("node_helper");
+const ical = require("ical");
+const request = require("request");
 
 module.exports = NodeHelper.create({
-  // Called when the Magic Mirror server starts.
   start: function () {
     console.log("Starting node helper for: " + this.name);
   },
 
-  // Handling notifications sent from the module
+  // Handle incoming socket notifications
   socketNotificationReceived: function (notification, payload) {
     if (notification === "FETCH_ICS") {
       this.fetchICSData(payload);
     }
   },
 
-  // Placeholder function for fetching ICS data
+  // Fetch and parse the ICS data
   fetchICSData: function (url) {
-    // Here, you would implement fetching ICS data from a URL and parsing it.
-    // Currently, it is just a placeholder.
-    console.log("Fetching ICS data from URL: ", url);
+    request(url, (error, response, body) => {
+      if (!error && response.statusCode == 200) {
+        const parsedData = ical.parseICS(body);
+        const events = [];
 
-    // Send a sample notification back to the front end
-    this.sendSocketNotification("ICS_DATA", {
-      message: "Sample ICS data processed",
+        for (let k in parsedData) {
+          if (parsedData.hasOwnProperty(k)) {
+            const ev = parsedData[k];
+            if (ev.type === "VEVENT") {
+              events.push({
+                title: ev.summary,
+                start: ev.start,
+                end: ev.end,
+                allDay: !ev.start.getHours() && !ev.end.getHours(),
+              });
+            }
+          }
+        }
+
+        // Send the parsed events to the front end
+        this.sendSocketNotification("ICS_DATA", events);
+      } else {
+        console.error("Error fetching ICS file:", error);
+      }
     });
   },
 });
