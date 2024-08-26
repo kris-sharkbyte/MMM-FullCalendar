@@ -1,5 +1,4 @@
 Module.register("MMM-FullCalendar", {
-  // Default module config.
   defaults: {
     initialView: "dayGridMonth", // Default to month view
     updateInterval: 24 * 60 * 60 * 1000, // Update once a day
@@ -7,22 +6,29 @@ Module.register("MMM-FullCalendar", {
   },
 
   start: function () {
+    console.log("[MMM-FullCalendar] Module started.");
     // Load events from the ICS file if a URL is provided
     if (this.config.icsUrl) {
+      console.log(
+        "[MMM-FullCalendar] Fetching ICS data from URL:",
+        this.config.icsUrl
+      );
       this.sendSocketNotification("FETCH_ICS", this.config.icsUrl);
+    } else {
+      console.warn("[MMM-FullCalendar] No ICS URL provided in config.");
     }
   },
 
   getScripts: function () {
     return [
-      "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js", // FullCalendar JS from CDN
+      "https://cdn.jsdelivr.net/npm/fullcalendar/index.global.min.js", // FullCalendar JS from CDN
     ];
   },
 
   getStyles: function () {
     return [
-      this.file("css/style.css"), // Custom styles for the module
-      "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css", // FullCalendar CSS from CDN
+      this.file("css/styles.css"), // Local custom styles
+      "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css", // FullCalendar CSS from CDN
     ];
   },
 
@@ -34,27 +40,41 @@ Module.register("MMM-FullCalendar", {
 
   socketNotificationReceived: function (notification, payload) {
     if (notification === "ICS_DATA") {
+      console.log(
+        "[MMM-FullCalendar] ICS data received. Rendering calendar with events:",
+        payload.length
+      );
       this.renderCalendar(payload);
+    } else {
+      console.log(
+        "[MMM-FullCalendar] Unhandled socket notification:",
+        notification
+      );
     }
   },
 
   renderCalendar: function (events) {
-    const wrapper = document.getElementById("calendar");
+    const calendarEl = document.getElementById("calendar");
 
-    // Clear any existing calendar
-    wrapper.innerHTML = "";
+    // Ensure FullCalendar is loaded and Calendar class is accessible
+    if (typeof FullCalendar.Calendar !== "undefined") {
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: this.config.initialView,
+        headerToolbar: {
+          start: "title",
+          center: "",
+          end: "",
+        },
+        height: "auto",
+        events: events,
+      });
 
-    // Initialize FullCalendar with events
-    const calendar = new FullCalendar.Calendar(wrapper, {
-      initialView: this.config.initialView, // Use the configured initial view
-      headerToolbar: {
-        start: "title", // Show the calendar title (month, year)
-        center: "", // Empty for simplicity, but you can add navigation buttons here if desired
-        end: "dayGridMonth,timeGridWeek,timeGridDay", // Buttons to switch between views
-      },
-      events: events, // Load events from the ICS data
-    });
-
-    calendar.render();
+      calendar.render();
+      console.log("[MMM-FullCalendar] Calendar rendered successfully.");
+    } else {
+      console.error(
+        "[MMM-FullCalendar] FullCalendar Calendar class is not defined. Please check script loading."
+      );
+    }
   },
 });
