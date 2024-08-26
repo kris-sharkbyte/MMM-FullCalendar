@@ -1,0 +1,25 @@
+{
+    "name": "MMM-FullCalendar",
+    "version": "1.0.0",
+    "description": "A Magic Mirror module to display a calendar using FullCalendar with support for various views.",
+    "main": "MMM-FullCalendar.js",
+    "author": "Kris Cole",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/yourusername/MMM-FullCalendar.git"
+    },
+    "keywords": [
+        "magic mirror",
+        "fullcalendar",
+        "calendar",
+        "module"
+    ],
+    "dependencies": {
+        "fullcalendar": "^6.1.15",
+        "ical": "^0.8.0"
+    },
+    "scripts": {
+        "start": "node MMM-FullCalendar.js"
+    }
+}
