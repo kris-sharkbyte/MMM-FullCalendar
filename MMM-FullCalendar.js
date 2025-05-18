@@ -9,13 +9,29 @@ Module.register("MMM-FullCalendar", {
     console.log("[MMM-FullCalendar] Module started.");
     // Load events from the ICS file if a URL is provided
     if (this.config.icsUrl) {
-      console.log(
-        "[MMM-FullCalendar] Fetching ICS data from URL:",
-        this.config.icsUrl
-      );
-      this.sendSocketNotification("FETCH_ICS", this.config.icsUrl);
+      this.fetchIcsData();
+      // Set up periodic update
+      this.updateTimer = setInterval(() => {
+        this.fetchIcsData();
+      }, this.config.updateInterval || 24 * 60 * 60 * 1000); // Default to once a day
     } else {
       console.warn("[MMM-FullCalendar] No ICS URL provided in config.");
+    }
+  },
+
+  fetchIcsData: function () {
+    console.log(
+      "[MMM-FullCalendar] Fetching ICS data from URL:",
+      this.config.icsUrl
+    );
+    this.sendSocketNotification("FETCH_ICS", this.config.icsUrl);
+  },
+
+  suspend: function () {
+    // Clear the timer when the module is suspended
+    if (this.updateTimer) {
+      clearInterval(this.updateTimer);
+      this.updateTimer = null;
     }
   },
 
